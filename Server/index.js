@@ -17,10 +17,6 @@ app.use(cors({
     credentials: true, 
 }));
 app.use(cookieParser())
-app.use(async () => {
-    await connectDB()
-    await addProductsInDB()
-})
 
 app.use('/user', User)
 app.use('/product', Product)
