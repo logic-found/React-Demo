@@ -17,6 +17,10 @@ app.use(cors({
     credentials: true, 
 }));
 app.use(cookieParser())
+app.use(async () => {
+    connectDB()
+    addProductsInDB()
+})
 
 app.use('/user', User)
 app.use('/product', Product)
