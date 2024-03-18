@@ -5,7 +5,7 @@ const {auth, authorizeRole} = require('../middleware/auth')
 
 router
 .get('/all', auth, getAllProducts)
-.delete('/all', auth,  deleteAllProducts)
+.delete('/all', auth, authorizeRole,  deleteAllProducts)
 .get('/:id', auth, getProductDetails)
 .patch('/:id', auth, updateProductDetails)
 

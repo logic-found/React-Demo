@@ -6,7 +6,7 @@ const {auth, authorizeRole} = require('../middleware/auth')
 router
 .get('/all', auth,  getAllReviews)
 .get('/pending',  auth, authorizeRole,  getAllPendingReviews)
-.delete('/all', deleteAllReviews)
+.delete('/all', auth, authorizeRole, deleteAllReviews)
 .get('/:id', auth, getReview)
 .patch('/:id', auth, authorizeRole,  updateReviewStatus)
 

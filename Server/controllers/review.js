@@ -53,8 +53,8 @@ exports.updateReviewStatus = ErrorHandler(async (req, res, next) => {
         const name = product.name?.value;
         const description = product.description?.value;
         const price = product.price?.value;
-        //const images = product.images?.value
-        const upatedProduct = { name, description, price };
+        const images = product.images?.value
+        const upatedProduct = { name, description, price, images };
         const updatedProduct = await Product.findByIdAndUpdate(
             product.id,
             upatedProduct,

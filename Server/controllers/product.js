@@ -4,21 +4,23 @@ const axios = require("axios");
 const { Review } = require("../schema/review");
 const multer = require("multer"); // For file upload
 const path = require("path"); // For file path manipulation
+const fs = require('fs'); // For image storage
 
-// Configure multer for image upload
-const upload = multer({
-    dest: path.join(__dirname, "../assets"), // Upload directory (adjust path as needed)
-    limits: { fileSize: 1000000 }, // Limit file size to 1MB (adjust as needed)
-    fileFilter: (req, file, cb) => {
-        const allowedExtensions = [".jpg", ".jpeg", ".png"];
-        const extname = path.extname(file.originalname);
-        if (!allowedExtensions.includes(extname.toLowerCase())) {
-            cb(new Error("Only JPG, JPEG, and PNG images are allowed"));
-        } else {
-            cb(null, true);
-        }
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, 'assets/'); // Replace 'assets' with your desired folder path
     },
-});
+    filename: (req, file, cb) => {
+      const extension = path.extname(file.originalname);
+      const filename = `image-${extension}`;
+      cb(null, filename);
+    }
+  });
+  
+  // Create a multer instance with the configured storage
+const upload = multer({ storage });
+  
 
 exports.getAllProducts = ErrorHandler(async (req, res, next) => {
     const response = await Product.find();
@@ -39,13 +41,12 @@ exports.updateProductDetails = ErrorHandler(async (req, res, next) => {
     const user = req.user;
     const { name, description, price, images } = req.body;
     const product = await Product.findById(id);
-    
     if (!product) {
         return res.status(404).json({ message: "Invalid Product" });
     } else if (user.role === "admin") {
         const response = await Product.findByIdAndUpdate(
             id,
-            { name, description, price },
+            { name, description, price, images},
             { new: true }
         );
         return res
@@ -69,21 +70,23 @@ exports.updateProductDetails = ErrorHandler(async (req, res, next) => {
                     value: price,
                     edited: product.price !== price ? true : false,
                 },
-                //images: { value: images, edited: (product.images !== images)? true:false}
+                images: { value: images, edited: (product.images !== images)? true:false}
             },
         });
-        // const uploadedImages = [];
-        // const files = req.body.product?.images
-        // if (files) {
-        //   for (const file of files) {
-        //     uploadedImages.push(file.path); // Store image paths
-        //   }
-        // }
+        const uploadedImages = [];
+        images.forEach((imageData, index) => {
+            const filename = `image-${Date.now()}-${index}`;
+            const filePath = path.join('assets', filename);
+            fs.writeFileSync(filePath, Buffer.from(imageData, 'base64'));
+            uploadedImages.push(filename);
+        });
+    
         await review.save();
         return res
             .status(200)
             .json({ message: "Review submitted successfully" });
     }
+    
 });
 exports.deleteAllProducts = ErrorHandler(async (req, res, next) => {
     const response = await Product.deleteMany();

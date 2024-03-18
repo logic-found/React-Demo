@@ -44,6 +44,7 @@ const PendingReviewDetails = () => {
         }
       };
 
+
     return (
         <>
             {loading ? (
@@ -52,6 +53,21 @@ const PendingReviewDetails = () => {
                 <div className="p-2 flex flex-col gap-4">
                     <p className=" font-bold text-xl">Author: {reviewDetails?.author_id?.email}</p>
                     <div className="flex flex-col gap-2 text-base">
+                        <div className="flex justify-start gap-2 items-center flex-wrap">
+                            <p className=" font-bold">Images: </p>
+                            <div
+                                className={`flex gap-2 flex-wrap p-4 ${
+                                    reviewDetails?.product?.images?.edited ===
+                                    true
+                                        ? "bg-yellow-300"
+                                        : ""
+                                }`}
+                            >
+                                {reviewDetails?.product?.images?.value?.map((image) => (
+                                    <img src={image} className=" h-44 w-44 border-2 border-solid border-black"/>
+                                ))}
+                            </div>
+                        </div>
                         <div className="flex justify-start gap-2 items-center flex-wrap">
                             <p className=" font-bold">Name: </p>
                             <p

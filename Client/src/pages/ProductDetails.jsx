@@ -25,49 +25,47 @@ const ProductDetails = () => {
     });
     const [productUpdateLoading, setProductUpdateLoading] = useState(false);
     const [src, selectedFile] = useState(null);
-    const [crop, setCrop] = useState(null);
+    const [crop, setCrop] = useState({ aspect: 16 / 9 });
     const [image, setImage] = useState(null);
-    const [resultImage, setResultImage] = useState(null);
+    const [croppedImages, setCroppedImages] = useState([]) 
 
     function getCroppedImg(e) {
-        e.preventDefault();
-        if (src) {
-            const img = new Image();
-            img.src = src;
-            img.onload = () => {
-                const canvas = document.createElement("canvas");
-                canvas.width = img.naturalWidth;
-                canvas.height = img.naturalHeight;
-          
-                const ctx = canvas.getContext("2d");
-          
-                // Adjust cropping coordinates based on original dimensions
-                ctx.drawImage(
-                  img,
-                  crop.x * img.naturalWidth / img.width,  // Adjust X using naturalWidth
-                  crop.y * img.naturalHeight / img.height, // Adjust Y using naturalHeight
-                  crop.width * img.naturalWidth / img.width,  // Adjust width using naturalWidth
-                  crop.height * img.naturalHeight / img.height, // Adjust height using naturalHeight
-                  0,
-                  0,
-                  crop.width * img.naturalWidth / img.width,
-                  crop.height * img.naturalHeight / img.height
-                );
-                const base64Image = canvas.toDataURL("image/jpeg");
-                setResultImage(base64Image);
-            };
-        }
+        e.preventDefault()
+        const canvas = document.createElement("canvas");
+        const scaleX = image.naturalWidth / image.width;
+        const scaleY = image.naturalHeight / image.height;
+        canvas.width = crop.width;
+        canvas.height = crop.height;
+        const ctx = canvas.getContext("2d");
+
+        ctx.drawImage(
+            image,
+            crop.x * scaleX,
+            crop.y * scaleY,
+            crop.width * scaleX,
+            crop.height * scaleY,
+            0,
+            0,
+            crop.width,
+            crop.height
+        );
+        const base64Image = canvas.toDataURL("image/jpeg");
+        setCrop(null)
+        selectedFile(null)
+        if(croppedImages.length<3) setCroppedImages((prevState) => [...prevState, base64Image])
+        else toast.error('Only 3 Images can be added!')
+        
     }
 
     const handleFileChange = (e) => {
-        selectedFile(URL.createObjectURL(e.target.files[0]));
-
-        // const file = e.target.files[0];
-        // const reader = new FileReader();
-        // reader.onload = () => {
-        //     selectedFile(reader.result);
-        // };
-        // reader.readAsDataURL(file);
+        const file = e.target.files[0]
+        if (file.size > 1000000) { // 1MB limit
+            toast.error('Image size exceeds the limit of 1MB. Please choose smaller images.')
+        }
+        else{
+            selectedFile(URL.createObjectURL(e.target.files[0]));
+        }
+  
     };
 
     useEffect(() => {
@@ -97,7 +95,7 @@ const ProductDetails = () => {
                     name: productDetails.name,
                     description: productDetails.description,
                     price: productDetails.price,
-                    images: productDetails.images,
+                    images: (croppedImages.length>0)? croppedImages: productDetails.images,
                 },
             });
             setProductUpdateLoading(false);
@@ -108,6 +106,8 @@ const ProductDetails = () => {
         }
     };
 
+    
+
     return (
         <>
             {loading ? (
@@ -116,16 +116,14 @@ const ProductDetails = () => {
                 <form className="text-center w-full p-4 flex flex-col gap-4 flex-wrap justify-evenly items-center text-gray-900">
                     <div className="w-full flex gap-6 justify-evenly">
                         <div className="flex flex-col gap-2">
-                            {productDetails.images?.length > 0 ? (
+                            {productDetails.images?.map((img) =>  (
                                 <img
-                                    src={productDetails?.images[0]}
+                                    src={img}
                                     alt="image"
                                     className=" h-60 w-60 rounded"
                                 />
-                            ) : (
-                                <p>No image present</p>
-                            )}
-                            {/* <input
+                            ))}
+                            <input
                                 type="file"
                                 accept="image/*"
                                 multiple
@@ -133,32 +131,34 @@ const ProductDetails = () => {
                             />
                             <div>
                                 {src && (
-                                    <>
+                                    <div className="flex flex-col gap-2">
                                         <ReactCrop
+                                            src={src}
                                             crop={crop}
-                                            onChange={(c) => setCrop(c)}
-                                        >
-                                            <img
-                                                src={src}
-                                                onLoad={setImage}
-                                                className=""
-                                            />
-                                        </ReactCrop>
+                                            onChange={(newCrop) =>
+                                                setCrop(newCrop)
+                                            }
+                                            onImageLoaded={setImage}
+                                        />
+                                        ;
                                         <button
                                             className="bg-red-500 p-3 rounded cursor-pointer"
                                             onClick={getCroppedImg}
                                         >
                                             Crop Image
                                         </button>
-                                    </>
+                                    </div>
                                 )}
-                                {resultImage && (
+                                <div className="flex gap-2 flex-wrap">
+                                {croppedImages?.map((image) =>  (
                                     <img
-                                        src={resultImage}
+                                        key={image}
+                                        src={image}
                                         className=" h-44 w-52"
                                     />
-                                )}
-                            </div> */}
+                                ))}
+                                </div>
+                            </div>
                         </div>
                         <div className="flex flex-col gap-2 text-base">
                             <div className="flex justify-between items-center flex-wrap">
