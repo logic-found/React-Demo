@@ -18,8 +18,8 @@ app.use(cors({
 }));
 app.use(cookieParser())
 app.use(async () => {
-    connectDB()
-    addProductsInDB()
+    await connectDB()
+    await addProductsInDB()
 })
 
 app.use('/user', User)
